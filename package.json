@@ -1,5 +1,5 @@
 {
-  "name": "sharedb",
+  "name": "@teamwork/sharedb",
   "version": "1.0.1",
   "description": "JSON OT database backend",
   "main": "lib/index.js",
