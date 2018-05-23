@@ -1,6 +1,6 @@
 var http = require('http');
 var express = require('express');
-var ShareDB = require('sharedb');
+var ShareDB = require('@teamwork/sharedb');
 var WebSocket = require('ws');
 var WebSocketJSONStream = require('websocket-json-stream');
 

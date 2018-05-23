@@ -1,4 +1,4 @@
-var sharedb = require('sharedb/lib/client');
+var sharedb = require('@teamwork/sharedb/lib/client');
 var StringBinding = require('sharedb-string-binding');
 
 // Open WebSocket connection to ShareDB server

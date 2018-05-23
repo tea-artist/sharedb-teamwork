@@ -1,4 +1,4 @@
-var sharedb = require('sharedb/lib/client');
+var sharedb = require('@teamwork/sharedb/lib/client');
 var richText = require('rich-text');
 var Quill = require('quill');
 sharedb.types.register(richText.type);

@@ -29,21 +29,21 @@ Here’s the longer story: ShareJS used Redis for the commit process, and only o
 
 ## API changes
 
-The ShareDB API is documented in the main [README](https://github.com/share/sharedb#server-api). When unsure, look there.
+The ShareDB API is documented in the main [README](https://github.com/teamwork/sharedb#server-api). When unsure, look there.
 
 ### Initialization
 
-The code to start a server instance and client has changed. See the main [README](https://github.com/share/sharedb#server-api) for more information.
+The code to start a server instance and client has changed. See the main [README](https://github.com/teamwork/sharedb#server-api) for more information.
 
 ### Top-level API
 
-The following methods have been replaced by methods on the [client API](https://github.com/share/sharedb#client-api):
+The following methods have been replaced by methods on the [client API](https://github.com/teamwork/sharedb#client-api):
 * `livedb.submit()`, replaced by `doc.submitOp()` and `doc.delete()`
 * `livedb.subscribe()` and `livedb.fetchAndSubscribe`, replaced by `doc.subscribe()`
 * `livedb.bulkSubscribe()`, replaced by `connection.startBulk(); ...; connection.endBulk()`. Currently undocumented
 * `livedb.queryFetch()` and `livedb.querySubscribe()`, replaced by `connection.createFetchQuery()` and `connection.createSubscribeQuery()`
 
-The following methods have been replaced by methods directly on the [database adapter](https://github.com/share/sharedb#database-adapters)
+The following methods have been replaced by methods directly on the [database adapter](https://github.com/teamwork/sharedb#database-adapters)
 * `livedb.fetch`, replaced by `db.getSnapshot()`
 * `livedb.bulkFetch`, replaced by `db.getSnapshotBulk()`
 * `livedb.getOps`, replaced by `db.getOps()`

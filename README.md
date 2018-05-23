@@ -1,8 +1,8 @@
 # ShareDB
 
-  [![NPM Version](https://img.shields.io/npm/v/sharedb.svg)](https://npmjs.org/package/sharedb)
-  [![Build Status](https://travis-ci.org/share/sharedb.svg?branch=master)](https://travis-ci.org/share/sharedb)
-  [![Coverage Status](https://coveralls.io/repos/github/share/sharedb/badge.svg?branch=master)](https://coveralls.io/github/share/sharedb?branch=master)
+  [![NPM Version](https://img.shields.io/npm/v/@teamwork/sharedb.svg)](https://npmjs.org/package/@teamwork/sharedb)
+  [![Build Status](https://travis-ci.org/Teamwork/sharedb.svg?branch=master)](https://travis-ci.org/Teamwork/sharedb)
+  [![Coverage Status](https://coveralls.io/repos/github/Teamwork/sharedb/badge.svg?branch=master)](https://coveralls.io/github/Teamwork/sharedb?branch=master)
 
 ShareDB is a realtime database backend based on [Operational Transformation
 (OT)](https://en.wikipedia.org/wiki/Operational_transformation) of JSON
@@ -13,7 +13,7 @@ For questions, discussion and announcements, join the [ShareJS mailing
 list](https://groups.google.com/forum/?fromgroups#!forum/sharejs) or [check the FAQ](./docs/faq.md).
 
 Please report any bugs you find to the [issue
-tracker](https://github.com/share/sharedb/issues).
+tracker](https://github.com/teamwork/sharedb/issues).
 
 ## Features
 
@@ -22,7 +22,7 @@ tracker](https://github.com/share/sharedb/issues).
 - Realtime synchronization of any ephemeral "presence" data
 - Synchronous editing API with asynchronous eventual consistency
 - Realtime query subscriptions
-- Simple integration with any database - [MongoDB](https://github.com/share/sharedb-mongo), [PostgresQL](https://github.com/share/sharedb-postgres) (experimental)
+- Simple integration with any database - [MongoDB](https://github.com/teamwork/sharedb-mongo), [PostgresQL](https://github.com/share/sharedb-postgres) (experimental)
 - Horizontally scalable with [pub/sub integration](#pubsub-adapters)
 - Projections to select desired fields from documents and operations
 - Middleware for implementing access control and custom extensions
@@ -69,7 +69,7 @@ Presence data represents a user and is automatically synchronized between all cl
 First, create a ShareDB server instance:
 
 ```js
-var ShareDB = require('sharedb');
+var ShareDB = require('@teamwork/sharedb');
 var share = new ShareDB(options);
 ```
 
@@ -83,16 +83,16 @@ __Options__
 
 #### Database Adapters
 * `ShareDB.MemoryDB`, backed by a non-persistent database with no queries
-* [`ShareDBMongo`](https://github.com/share/sharedb-mongo), backed by a real Mongo database
+* [`ShareDBMongo`](https://github.com/teamwork/sharedb-mongo), backed by a real Mongo database
   and full query support
-* [`ShareDBMingoMemory`](https://github.com/share/sharedb-mingo-memory), backed by
+* [`ShareDBMingoMemory`](https://github.com/teamwork/sharedb-mingo-memory), backed by
   a non-persistent database supporting most Mongo queries. Useful for faster
   testing of a Mongo-based app.
 * [`ShareDBPostgres`](https://github.com/share/sharedb-postgres), backed by PostgresQL. No query support.
 
 #### Pub/Sub Adapters
 * `ShareDB.MemoryPubSub` can be used with a single process
-* [`ShareDBRedisPubSub`](https://github.com/share/sharedb-redis-pubsub) can be used
+* [`ShareDBRedisPubSub`](https://github.com/teamwork/sharedb-redis-pubsub) can be used
   with multiple processes using Redis' pub/sub mechanism
 
 Community Provided Pub/Sub Adapters
@@ -188,7 +188,7 @@ var connection = share.connect();
 To use ShareDB from a browser, use a client bundler like Browserify or Webpack. The following
 code connects to the ShareDB server instance over WebSockets:
 ```js
-var ShareDB = require('sharedb/lib/client');
+var ShareDB = require('@teamwork/sharedb/lib/client');
 var socket = new WebSocket('ws://localhost:8080');
 var connection = new ShareDB.Connection(socket);
 ```

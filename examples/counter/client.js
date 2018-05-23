@@ -1,4 +1,4 @@
-var sharedb = require('sharedb/lib/client');
+var sharedb = require('@teamwork/sharedb/lib/client');
 
 // Open WebSocket connection to ShareDB server
 var socket = new WebSocket('ws://' + window.location.host);

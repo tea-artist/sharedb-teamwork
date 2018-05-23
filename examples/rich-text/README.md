@@ -4,7 +4,7 @@ This is a collaborative rich text editor using [Quill](https://github.com/quillj
 
 In this demo, data is not persisted. To persist data, run a Mongo
 server and initialize ShareDB with the
-[ShareDBMongo](https://github.com/share/sharedb-mongo) database adapter.
+[ShareDBMongo](https://github.com/teamwork/sharedb-mongo) database adapter.
 
 ## Install dependencies
 ```
