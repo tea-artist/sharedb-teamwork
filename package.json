@@ -17,10 +17,12 @@
     "istanbul": "^0.4.2",
     "jshint": "^2.9.2",
     "mocha": "^5.1.1",
-    "@teamwork/sharedb-mingo-memory": "^1.0.1"
+    "@teamwork/sharedb-mingo-memory": "^1.0.2"
   },
   "scripts": {
+    "pretest": "[ -e node_modules/@teamwork/sharedb ] || ln -s ../.. node_modules/@teamwork/sharedb",
     "test": "./node_modules/.bin/mocha && npm run jshint",
+    "pretest-cover": "[ -e node_modules/@teamwork/sharedb ] || ln -s ../.. node_modules/@teamwork/sharedb",
     "test-cover": "node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha",
     "jshint": "./node_modules/.bin/jshint lib/*.js test/*.js"
   },
