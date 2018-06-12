@@ -45,7 +45,7 @@ In ShareDB's view of the world, every document has 3 properties:
 
 - **version** - An incrementing number starting at 0
 - **type** - An OT type. OT types are defined in
-[share/ottypes](https://github.com/share/ottypes). Documents
+[teamwork/ot-docs](https://github.com/teamwork/ot-docs). Documents
 which don't exist implicitly have a type of `null`.
 - **data** - The actual data that the document contains. This must be pure
 acyclic JSON. Its also type-specific. (JSON type uses raw JSON, text documents
@@ -60,7 +60,7 @@ default, ShareDB stores all operations forever - nothing is truly deleted.
 
 ## User presence synchronization
 
-Presence data represents a user and is automatically synchronized between all clients subscribed to the same document. Its format is defined by the document's [OT Type](https://github.com/ottypes/docs), for example it may contain a user ID and a cursor position in a text document. All clients can modify their own presence data and receive a read-only version of other client's data. Presence data is automatically cleared when a client unsubscribes from the document or disconnects. It is also automatically transformed against applied operations, so that it still makes sense in the context of a modified document, for example a cursor position may be automatically advanced when a user types at the beginning of a text document.
+Presence data represents a user and is automatically synchronized between all clients subscribed to the same document. Its format is defined by the document's [OT Type](https://github.com/teamwork/ot-docs), for example it may contain a user ID and a cursor position in a text document. All clients can modify their own presence data and receive a read-only version of other client's data. Presence data is automatically cleared when a client unsubscribes from the document or disconnects. It is also automatically transformed against applied operations, so that it still makes sense in the context of a modified document, for example a cursor position may be automatically advanced when a user types at the beginning of a text document.
 
 ## Server API
 
@@ -220,7 +220,7 @@ changes. Returns a [`ShareDB.Query`](#class-sharedbquery) instance.
 ### Class: `ShareDB.Doc`
 
 `doc.type` _(String_)
-The [OT type](https://github.com/ottypes/docs) of this document
+The [OT type](https://github.com/teamwork/ot-docs) of this document
 
 `doc.id` _(String)_
 Unique document ID
@@ -272,7 +272,7 @@ Removes any listener you added with `doc.on`. `eventName` should be one of `'loa
 `doc.create(data[, type][, options][, function(err) {...}])`
 Create the document locally and send create operation to the server.
 * `data` Initial document contents
-* `type` _([OT type](https://github.com/ottypes/docs))_
+* `type` _([OT type](https://github.com/teamwork/ot-docs))_
   Defaults to `'ot-json0'`, for which `data` is an Object
 * `options.source` Argument passed to the `'create'` event locally. This is not sent to the server or other clients. Defaults to `true`.
 
