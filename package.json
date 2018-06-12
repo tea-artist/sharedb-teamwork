@@ -20,10 +20,14 @@
     "@teamwork/sharedb-mingo-memory": "^1.0.2"
   },
   "scripts": {
-    "pretest": "[ -e node_modules/@teamwork/sharedb ] || ln -s ../.. node_modules/@teamwork/sharedb",
+    "create-symlink": "[ -e node_modules/@teamwork/sharedb ] || ln -s ../.. node_modules/@teamwork/sharedb",
+    "remove-symlink": "rm -f node_modules/@teamwork/sharedb",
+    "pretest": "npm run create-symlink",
     "test": "./node_modules/.bin/mocha && npm run jshint",
-    "pretest-cover": "[ -e node_modules/@teamwork/sharedb ] || ln -s ../.. node_modules/@teamwork/sharedb",
+    "posttest": "npm run remove-symlink",
+    "pretest-cover": "npm run create-symlink",
     "test-cover": "node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha",
+    "posttest-cover": "npm run remove-symlink",
     "jshint": "./node_modules/.bin/jshint lib/*.js test/*.js"
   },
   "repository": {
