@@ -20,6 +20,7 @@ tracker](https://github.com/teamwork/sharedb/issues).
 - Realtime synchronization of any JSON document
 - Concurrent multi-user collaboration
 - Realtime synchronization of any ephemeral "presence" data
+- Local undo and redo
 - Synchronous editing API with asynchronous eventual consistency
 - Realtime query subscriptions
 - Simple integration with any database - [MongoDB](https://github.com/teamwork/sharedb-mongo), [PostgresQL](https://github.com/share/sharedb-postgres) (experimental)
@@ -219,7 +220,7 @@ changes. Returns a [`ShareDB.Query`](#class-sharedbquery) instance.
 
 ### Class: `ShareDB.Doc`
 
-`doc.type` _(String_)
+`doc.type` _(String)_
 The [OT type](https://github.com/teamwork/ot-docs) of this document
 
 `doc.id` _(String)_
@@ -230,6 +231,13 @@ Document contents. Available after document is fetched or subscribed to.
 
 `doc.presence` _(Object)_
 Each property under `doc.presence` contains presence data shared by a client subscribed to this document. The property name is an empty string for this client's data and connection IDs for other clients' data.
+
+`doc.undoLimit` _(Number, read-write, default=100)_
+The max number of operations to keep on the undo stack.
+
+`doc.undoComposeTimeout` _(Number, read-write, default=1000)_
+The max time difference between operations in milliseconds,
+which still allows "UNDOABLE" operations to be composed on the undo stack.
 
 `doc.fetch(function(err) {...})`
 Populate the fields on `doc` with a snapshot of the document from the server.
@@ -254,8 +262,8 @@ The document was created. Technically, this means it has a type. `source` will b
 `doc.on('before op'), function(op, source) {...})`
 An operation is about to be applied to the data. `source` will be `false` for ops received from the server and defaults to `true` for ops generated locally.
 
-`doc.on('op', function(op, source) {...})`
-An operation was applied to the data. `source` will be `false` for ops received from the server and defaults to `true` for ops generated locally.
+`doc.on('op', function(op, source, operationType) {...})`
+An operation was applied to the data. `source` will be `false` for ops received from the server and defaults to `true` for ops generated locally. `operationType` is one of the following: `"UNDOABLE"` _(local operation that can be undone)_, `"FIXED"` _(local or remote operation that can't be undone nor redone)_, `"UNDO"` _(local undo operation that can be redone)_ and `"REDO"` _(local redo operation that can be undone)_.
 
 `doc.on('del', function(data, source) {...})`
 The document was deleted. Document contents before deletion are passed in as an argument. `source` will be `false` for ops received from the server and defaults to `true` for ops generated locally.
@@ -282,6 +290,19 @@ Apply operation to document and send it to the server.
 [operations for the default `'ot-json0'` type](https://github.com/ottypes/json0#summary-of-operations).
 Call this after you've either fetched or subscribed to the document.
 * `options.source` Argument passed to the `'op'` event locally. This is not sent to the server or other clients. Defaults to `true`.
+* `options.undoable` Should it be possible to undo this operation, default=false.
+* `options.fixUpUndoStack` Determines how a non-undoable operation affects the undo stack. If `false` (default), the operation transforms the undo stack, otherwise it is inverted and composed into the last operation on the undo stack.
+* `options.fixUpRedoStack` Determines how a non-undoable operation affects the redo stack. If `false` (default), the operation transforms the redo stack, otherwise it is inverted and composed into the last operation on the redo stack.
+
+`doc.submitSnapshot(snapshot[, options][, function(err) {...}])`
+Diff the current and the provided snapshots to generate an operation, apply the operation to the document and send it to the server.
+`snapshot` structure depends on the document type.
+Call this after you've either fetched or subscribed to the document.
+* `options.source` Argument passed to the `'op'` event locally. This is not sent to the server or other clients. Defaults to `true`.
+* `options.undoable` Should it be possible to undo this operation, default=false.
+* `options.fixUpUndoStack` Determines how a non-undoable operation affects the undo stack. If `false` (default), the operation transforms the undo stack, otherwise it is inverted and composed into the last operation on the undo stack.
+* `options.fixUpRedoStack` Determines how a non-undoable operation affects the redo stack. If `false` (default), the operation transforms the redo stack, otherwise it is inverted and composed into the last operation on the redo stack.
+* `options.diffHint` A hint passed into the `diff`/`diffX` functions defined by the document type.
 
 `doc.del([options][, function(err) {...}])`
 Delete the document locally and send delete operation to the server.
@@ -298,8 +319,23 @@ Note that `whenNothingPending` does NOT wait for pending `model.query()` calls.
 
 `doc.submitPresence(presenceData[, function(err) {...}])`
 Set local presence data and publish it for other clients.
+
 `presenceData` structure depends on the document type.
 Presence is synchronized only when subscribed to the document.
+
+`doc.canUndo()`
+Return `true`, if there's an operation on the undo stack that can be undone, otherwise `false`.
+
+`doc.undo([options][, function(err) {...}])`
+Undo a previously applied "UNDOABLE" or "REDO" operation.
+* `options.source` Argument passed to the `'op'` event locally. This is not sent to the server or other clients. Defaults to `true`.
+
+`doc.canRedo()`
+Return `true`, if there's an operation on the redo stack that can be undone, otherwise `false`.
+
+`doc.redo([options][, function(err) {...}])`
+Redo a previously applied "UNDO" operation.
+* `options.source` Argument passed to the `'op'` event locally. This is not sent to the server or other clients. Defaults to `true`.
 
 ### Class: `ShareDB.Query`
 
@@ -379,6 +415,7 @@ Additional fields may be added to the error object for debugging context dependi
 * 4024 - OT Type does not support presence
 * 4025 - Not subscribed to document
 * 4026 - Presence data superseded
+* 4027 - OT Type does not support `diff` nor `diffX`
 
 ### 5000 - Internal error
 
