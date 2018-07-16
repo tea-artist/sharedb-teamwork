@@ -1,36 +1,51 @@
-## v1.0-beta
+# v1.3.0
 
-### Breaking changes
+## Breaking changes
 
-* Add options argument to all public database adapter methods that read
-  or write from snapshots or ops.
+## Non-breaking changes
 
-* DB methods that get snapshots or ops no longer return metadata unless
-  `{metadata: true}` option is passed.
+- Support custom `clientId`, see `ShareDB.listen`.
 
-* Replace `source` argument with `options` in doc methods. Use `options.source`
-  instead.
 
-* Backend streams now write objects intead of strings.
+# v1.2.0
 
-* MemoryDB.prototype._querySync now returns `{snapshots: ..., extra: ...}`
-  instead of just an array of snapshots.
+## Breaking changes
 
-### Non-breaking changes
+## Non-breaking changes
 
-* Add options argument to backend.submit.
+- Add local undo/redo support for document operations.
+- Implement `Doc.submitSnapshot`.
 
-* Add error codes to all errors.
 
-* Add `'updated'` event on queries which fires on all query result changes.
+# v1.1.0
 
-* In clients, wrap errors in Error objects to they get passed through event
-  emitters.
+## Breaking changes
 
-* Sanitize stack traces when sending errors to client, but log them on the
-  server.
+## Non-breaking changes
 
-## v0.11.37
+- Add presence data synchronization.
+
+
+# v1.0-beta
+
+## Breaking changes
+
+- Add options argument to all public database adapter methods that read or write from snapshots or ops.
+- DB methods that get snapshots or ops no longer return metadata unless `{metadata: true}` option is passed.
+- Replace `source` argument with `options` in doc methods. Use `options.source` instead.
+- Backend streams now write objects intead of strings.
+- MemoryDB.prototype._querySync now returns `{snapshots: ..., extra: ...}` instead of just an array of snapshots.
+
+## Non-breaking changes
+
+- Add options argument to backend.submit.
+- Add error codes to all errors.
+- Add `'updated'` event on queries which fires on all query result changes.
+- In clients, wrap errors in Error objects to they get passed through event emitters.
+- Sanitize stack traces when sending errors to client, but log them on the server.
+
+
+# v0.11.37
 
 Beginning of changelog.
 
