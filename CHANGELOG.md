@@ -1,3 +1,12 @@
+# v1.4.0
+
+## Breaking changes
+
+## Non-breaking changes
+
+- Support `skipNoop` option for `Doc.submitOp` and `Doc.submitSnapshot`. By default no-ops are NOT skipped. This actually restores backward compatibility which was broken by v1.2.0 which started skipping no-ops by default.
+
+
 # v1.3.0
 
 ## Breaking changes
