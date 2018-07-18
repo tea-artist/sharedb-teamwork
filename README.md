@@ -134,7 +134,7 @@ The `listen` method accepts the following arguments:
 
   - `stream` - the stream to listen to for messages from the client
   - `req` (optional) - an initial request which is passed through to any `connect` middleware. This is useful for inspecting cookies; Express session; etc. on the request object in the middleware
-  - `clientId` (optional) - an identifier for the connecting client. This will be prepended to the connection ID, and can be used to identify the source client of an operation. The `src` field will look like `<clientId>:<randomId>`
+  - `clientId` (DEPRECATED, optional) - an identifier for the connecting client. This will be prepended to the connection ID, and can be used to identify the source client of an operation. The `src` field will look like `<clientId>:<randomId>`. See https://github.com/share/sharedb/pull/224#issuecomment-406007617 for an alternative.
 
 ### Middlewares
 
