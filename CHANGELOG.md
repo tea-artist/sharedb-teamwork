@@ -1,3 +1,14 @@
+# v2.0.0
+
+## Breaking changes
+
+- Remove support for the `clientIdPrefix` parameter passed into `Agent`. Use middleware actions to store extra data with operations, see https://github.com/share/sharedb/pull/224#issuecomment-406207724.
+- Overhaul the undo/redo API.
+- Log warnings when using deprecated features.
+
+## Non-breaking changes
+
+
 # v1.4.0
 
 ## Breaking changes
@@ -13,7 +24,7 @@
 
 ## Non-breaking changes
 
-- Support custom `clientId`, see `ShareDB.listen`.
+- Support a custom `clientId` prefix, see `ShareDB.listen`.
 
 
 # v1.2.0
