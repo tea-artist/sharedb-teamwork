@@ -1,3 +1,12 @@
+# v2.0.1
+
+## Breaking changes
+
+## Non-breaking changes
+
+- Fix tests for sharedb-mongo.
+
+
 # v2.0.0
 
 ## Breaking changes
