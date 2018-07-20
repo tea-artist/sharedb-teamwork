@@ -1096,23 +1096,33 @@ describe('client submit', function() {
   });
 
   it('does not skip processing when submitting a no-op by default', function(done) {
+    var opCalled = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.on('op', function() {
       expect(doc.data).to.eql([ otRichText.Action.createInsertText('test') ]);
-      done();
+      opCalled = true;
     });
     doc.create([ otRichText.Action.createInsertText('test') ], otRichText.type.uri);
-    doc.submitOp([]);
+    doc.submitOp([], function(err) {
+      if (err) return done(err);
+      expect(opCalled).to.equal(true);
+      done();
+    });
   });
 
   it('does not skip processing when submitting an identical snapshot by default', function(done) {
+    var opCalled = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.on('op', function() {
       expect(doc.data).to.eql([ otRichText.Action.createInsertText('test') ]);
-      done();
+      opCalled = true;
     });
     doc.create([ otRichText.Action.createInsertText('test') ], otRichText.type.uri);
-    doc.submitSnapshot([ otRichText.Action.createInsertText('test') ]);
+    doc.submitSnapshot([ otRichText.Action.createInsertText('test') ], function(err) {
+      if (err) return done(err);
+      expect(opCalled).to.equal(true);
+      done();
+    });
   });
 
   it('skips processing when submitting a no-op (no callback)', function(done) {
@@ -1123,7 +1133,7 @@ describe('client submit', function() {
     doc.create([ otRichText.Action.createInsertText('test') ], otRichText.type.uri);
     doc.submitOp([], { skipNoop: true });
     expect(doc.data).to.eql([ otRichText.Action.createInsertText('test') ]);
-    done();
+    doc.whenNothingPending(done);
   });
 
   it('skips processing when submitting a no-op (with callback)', function(done) {
@@ -1132,7 +1142,10 @@ describe('client submit', function() {
       done(new Error('Should not emit `op`'));
     });
     doc.create([ otRichText.Action.createInsertText('test') ], otRichText.type.uri);
-    doc.submitOp([], { skipNoop: true }, done);
+    doc.submitOp([], { skipNoop: true }, function(err) {
+      if (err) return done(err);
+      doc.whenNothingPending(done);
+    });
   });
 
   it('skips processing when submitting an identical snapshot (no callback)', function(done) {
@@ -1143,7 +1156,7 @@ describe('client submit', function() {
     doc.create([ otRichText.Action.createInsertText('test') ], otRichText.type.uri);
     doc.submitSnapshot([ otRichText.Action.createInsertText('test') ], { skipNoop: true });
     expect(doc.data).to.eql([ otRichText.Action.createInsertText('test') ]);
-    done();
+    doc.whenNothingPending(done);
   });
 
   it('skips processing when submitting an identical snapshot (with callback)', function(done) {
@@ -1152,7 +1165,10 @@ describe('client submit', function() {
       done(new Error('Should not emit `op`'));
     });
     doc.create([ otRichText.Action.createInsertText('test') ], otRichText.type.uri);
-    doc.submitSnapshot([ otRichText.Action.createInsertText('test') ], { skipNoop: true }, done);
+    doc.submitSnapshot([ otRichText.Action.createInsertText('test') ], { skipNoop: true }, function(err) {
+      if (err) return done(err);
+      doc.whenNothingPending(done);
+    });
   });
 
   it('submits a snapshot when document is not created (no callback, no options)', function(done) {
@@ -1196,15 +1212,20 @@ describe('client submit', function() {
   });
 
   it('submits a snapshot with source (no callback)', function(done) {
+    var opCalled = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.on('op', function(op, source) {
       expect(op).to.eql([ otRichText.Action.createInsertText('abc') ]);
       expect(doc.data).to.eql([ otRichText.Action.createInsertText('abcdef') ]);
       expect(source).to.equal('test');
-      done();
+      opCalled = true;
     });
     doc.create([ otRichText.Action.createInsertText('def') ], otRichText.type.uri);
     doc.submitSnapshot([ otRichText.Action.createInsertText('abcdef') ], { source: 'test' });
+    doc.whenNothingPending(function() {
+      expect(opCalled).to.equal(true);
+      done();
+    });
   });
 
   it('submits a snapshot with source (with callback)', function(done) {
@@ -1224,15 +1245,20 @@ describe('client submit', function() {
   });
 
   it('submits a snapshot without source (no callback)', function(done) {
+    var opCalled = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.on('op', function(op, source) {
       expect(op).to.eql([ otRichText.Action.createInsertText('abc') ]);
       expect(doc.data).to.eql([ otRichText.Action.createInsertText('abcdef') ]);
       expect(source).to.equal(true);
-      done();
+      opCalled = true;
     });
     doc.create([ otRichText.Action.createInsertText('def') ], otRichText.type.uri);
     doc.submitSnapshot([ otRichText.Action.createInsertText('abcdef') ]);
+    doc.whenNothingPending(function() {
+      expect(opCalled).to.equal(true);
+      done();
+    });
   });
 
   it('submits a snapshot without source (with callback)', function(done) {
@@ -1273,47 +1299,67 @@ describe('client submit', function() {
   });
 
   it('submits a snapshot (no diff, no diffX, no callback)', function(done) {
+    var gotError = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.on('error', function(error) {
       expect(error).to.be.an(Error);
       expect(error.code).to.equal(4027);
-      done();
+      gotError = true;
     });
     doc.create({ test: 5 });
     doc.submitSnapshot({ test: 7 });
+    doc.whenNothingPending(function() {
+      expect(gotError).to.equal(true);
+      done();
+    });
   });
 
   it('submits a snapshot (no diff, no diffX, with callback)', function(done) {
+    var gotError = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.on('error', done);
     doc.create({ test: 5 });
     doc.submitSnapshot({ test: 7 }, function(error) {
       expect(error).to.be.an(Error);
       expect(error.code).to.equal(4027);
+      gotError = true;
+    });
+    doc.whenNothingPending(function() {
+      expect(gotError).to.equal(true);
       done();
     });
   });
 
   it('submits a snapshot without a diffHint', function(done) {
+    var opCalled = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.create([ otRichText.Action.createInsertText('aaaa') ], otRichText.type.uri);
     doc.on('op', function(op) {
       expect(doc.data).to.eql([ otRichText.Action.createInsertText('aaaaa') ]);
       expect(op).to.eql([ otRichText.Action.createInsertText('a') ]);
-      done();
+      opCalled = true;
     });
     doc.submitSnapshot([ otRichText.Action.createInsertText('aaaaa') ]);
+    doc.whenNothingPending(function() {
+      expect(opCalled).to.equal(true);
+      done();
+    });
   });
 
   it('submits a snapshot with a diffHint', function(done) {
+    var opCalled = false;
     var doc = this.backend.connect().get('dogs', 'fido');
     doc.create([ otRichText.Action.createInsertText('aaaa') ], otRichText.type.uri);
     doc.on('op', function(op) {
       expect(doc.data).to.eql([ otRichText.Action.createInsertText('aaaaa') ]);
       expect(op).to.eql([ otRichText.Action.createRetain(2), otRichText.Action.createInsertText('a') ]);
-      done();
+      opCalled = true;
     });
     doc.submitSnapshot([ otRichText.Action.createInsertText('aaaaa') ], { diffHint: 2 });
+    doc.whenNothingPending(function() {
+      expect(opCalled).to.equal(true);
+      done();
+    });
   });
 
   describe('type.deserialize', function() {
