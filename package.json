@@ -20,24 +20,17 @@
     "lolex": "^2.7.1",
     "mocha": "^5.2.0",
     "ot-text": "^1.0.1",
-    "rich-text": "^3.1.0",
-    "@teamwork/sharedb-mingo-memory": "^1.0.2"
+    "rich-text": "^3.1.0"
   },
   "scripts": {
-    "create-symlink": "[ -e node_modules/@teamwork/sharedb ] || ln -s ../.. node_modules/@teamwork/sharedb",
-    "remove-symlink": "rm -f node_modules/@teamwork/sharedb",
-    "pretest": "npm run create-symlink",
-    "test": "./node_modules/.bin/mocha && npm run jshint",
-    "posttest": "npm run remove-symlink",
-    "pretest-cover": "npm run create-symlink",
-    "test-cover": "node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha",
-    "posttest-cover": "npm run remove-symlink",
-    "jshint": "./node_modules/.bin/jshint lib/*.js test/*.js"
+    "test": "mocha",
+    "test-cover": "istanbul cover _mocha",
+    "jshint": "jshint lib/*.js test/*.js"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/teamwork/sharedb.git"
   },
-  "author": "Nate Smith and Joseph Gentle",
+  "author": "Nate Smith, Joseph Gentle and Greg Kubisa",
   "license": "MIT"
 }
