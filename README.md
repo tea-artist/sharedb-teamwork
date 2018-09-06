@@ -239,6 +239,27 @@ changes. Returns a [`ShareDB.Query`](#class-sharedbquery) instance.
 * `options.limit` the max number of operations to keep on the undo stack.
 * `options.composeInterval` the max time difference between operations in milliseconds, which still allows the operations to be composed on the undo stack.
 
+`connection.fetchSnapshot(collection, id, version, callback): void;`
+Get a read-only snapshot of a document at the requested version.
+
+* `collection` _(String)_
+  Collection name of the snapshot
+* `id` _(String)_
+  ID of the snapshot
+* `version` _(number) [optional]_
+  The version number of the desired snapshot
+* `callback` _(Function)_
+  Called with `(error, snapshot)`, where `snapshot` takes the following form:
+
+  ```javascript
+  {
+    id: string;         // ID of the snapshot
+    v: number;          // version number of the snapshot
+    type: string;       // the OT type of the snapshot, or null if it doesn't exist or is deleted
+    data: any;          // the snapshot
+  }
+  ```
+
 ### Class: `ShareDB.Doc`
 
 `doc.type` _(String)_
@@ -434,11 +455,12 @@ Additional fields may be added to the error object for debugging context dependi
 * 4021 - Invalid client id
 * 4022 - Database adapter does not support queries
 * 4023 - Cannot project snapshots of this type
-* 4024 - OT Type does not support presence
+* 4024 - Invalid version
 * 4025 - Not subscribed to document
 * 4026 - Presence data superseded
 * 4027 - OT Type does not support `diff` nor `diffX`
 * 4028 - OT Type does not support `invert` nor `applyAndInvert`
+* 4029 - OT Type does not support presence
 
 ### 5000 - Internal error
 
@@ -462,3 +484,5 @@ The `41xx` and `51xx` codes are reserved for use by ShareDB DB adapters, and the
 * 5016 - _unsubscribe PubSub method unimplemented
 * 5017 - _publish PubSub method unimplemented
 * 5018 - Required QueryEmitter listener not assigned
+* 5019 - getMilestoneSnapshot MilestoneDB method unimplemented
+* 5020 - saveMilestoneSnapshot MilestoneDB method unimplemented
