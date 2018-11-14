@@ -1,3 +1,10 @@
+# v3.0.1
+
+## Non-breaking changes
+
+- Ignore undoable no-ops in UndoManager. As a result, no-ops will no longer clear the redo stack.
+
+
 # v3.0.0
 
 ## Breaking changes
