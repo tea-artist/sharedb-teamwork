@@ -1,4 +1,4 @@
-var sharedb = require('@teamwork/sharedb/lib/client');
+var sharedb = require('../../lib/client');
 var StringBinding = require('sharedb-string-binding');
 
 // Open WebSocket connection to ShareDB server
@@ -30,7 +30,7 @@ socket.onerror = function() {
 var doc = connection.get('examples', 'textarea');
 doc.subscribe(function(err) {
   if (err) throw err;
-  
+
   var binding = new StringBinding(element, doc, ['content']);
   binding.setup();
 });
