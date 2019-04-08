@@ -631,7 +631,6 @@ describe('client submit', function() {
           if (err) return done(err);
           doc.pause();
           doc.submitOp({p: ['age'], na: 1}, function(err) {
-            expect(err).ok();
             expect(err.code).to.equal(4017);
             expect(doc.version).equal(2);
             expect(doc.data).eql(undefined);
@@ -656,7 +655,6 @@ describe('client submit', function() {
             if (err) return done(err);
             doc.pause();
             doc.create({age: 9}, function(err) {
-              expect(err).ok();
               expect(err.code).to.equal(4018);
               expect(doc.version).equal(3);
               expect(doc.data).eql({age: 5});
