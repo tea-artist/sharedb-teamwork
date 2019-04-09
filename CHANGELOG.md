@@ -1,3 +1,11 @@
+# v3.1.0
+
+## Non-breaking changes
+
+- Merge the latest changes from `share/sharedb`.
+- Clean up "Agent" on stream "close" in addition to stream "end".
+
+
 # v3.0.1
 
 ## Non-breaking changes
