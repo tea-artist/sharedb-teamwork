@@ -1,3 +1,10 @@
+# v3.1.1
+
+## Non-breaking changes
+
+- Do not compose ops which have been sent to the server, even if they were not acknowledged, for example due to disconnection.
+
+
 # v3.1.0
 
 ## Non-breaking changes
