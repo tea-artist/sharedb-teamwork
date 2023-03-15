@@ -1,17 +1,29 @@
 var async = require('async');
-var expect = require('expect.js');
+var expect = require('chai').expect;
 var Backend = require('../lib/backend');
 var ot = require('../lib/ot');
 
+/**
+ * Run the DB test suite. Useful for testing external DB adapters:
+ * require('sharedb/test/db')(options);
+ *
+ * options.create() should instantiate a database adapter and call the
+ * provided callback with it.
+ * options.create = function(callback) {
+ *   // Create instance of Db
+ *   callback(error, db);
+ * }
+ *
+ * options.getQuery() is optional, and only needed if the adapter supports
+ * queries. It needs to accept the "generic" query provided by the
+ * test suite, and return a query specific to the adapter.
+ * options.getQuery = function(genericQuery) {
+ *   // map genericQuery into adapter-specific query
+ *   return mappedQuery;
+ * }
+ */
 module.exports = function(options) {
   var create = options.create;
-  function getQuery(queryOptions) {
-    for (var key in queryOptions.query) {
-      var mongoKey = (key[0] === '$' || (key.indexOf('.') !== -1));
-      if (mongoKey) throw new Error('unsupported in tests: ' + key);
-    }
-    return options.getQuery(queryOptions);
-  }
 
   describe('db', function() {
     beforeEach(function(done) {
@@ -36,10 +48,24 @@ module.exports = function(options) {
       });
     });
 
-    require('./client/projections')();
-    require('./client/query-subscribe')({getQuery: getQuery});
-    require('./client/query')({getQuery: getQuery});
+    it('calls db.close() multiple times', function(done) {
+      var db = this.db;
+      db.close(function(error) {
+        if (error) return done(error);
+        db.close(function(error) {
+          done(error);
+        });
+      });
+    });
+
+    if (options.getQuery) {
+      require('./client/query-subscribe')({getQuery: options.getQuery});
+      require('./client/query')({getQuery: options.getQuery});
+    }
+
+    require('./client/projections')({getQuery: options.getQuery});
     require('./client/submit')();
+    require('./client/submit-json1')();
     require('./client/subscribe')();
 
     // Simplified mock of how submit request applies operations. The
@@ -87,7 +113,7 @@ module.exports = function(options) {
       function testCreateCommit(ops, snapshot) {
         expect(snapshot.v).eql(1);
         expect(ops.length).equal(1);
-        expect(ops[0].create).ok();
+        expect(ops[0].create).ok;
       }
 
       it('one commit succeeds from 2 simultaneous creates', function(done) {
@@ -117,8 +143,8 @@ module.exports = function(options) {
       function testOpCommit(ops, snapshot) {
         expect(snapshot.v).equal(2);
         expect(ops.length).equal(2);
-        expect(ops[0].create).ok();
-        expect(ops[1].op).ok();
+        expect(ops[0].create).ok;
+        expect(ops[1].op).ok;
       }
 
       function testDelCommit(ops, snapshot) {
@@ -126,7 +152,7 @@ module.exports = function(options) {
         expect(ops.length).equal(2);
         expect(snapshot.data).equal(undefined);
         expect(snapshot.type).equal(null);
-        expect(ops[0].create).ok();
+        expect(ops[0].create).ok;
         expect(ops[1].del).equal(true);
       }
 
@@ -229,7 +255,7 @@ module.exports = function(options) {
       it('getSnapshot returns v0 snapshot', function(done) {
         this.db.getSnapshot('testcollection', 'test', null, null, function(err, result) {
           if (err) return done(err);
-          expect(result).eql({id: 'test', type: null, v: 0, data: undefined});
+          expect(result).eql({id: 'test', type: null, v: 0, data: undefined, m: null});
           done();
         });
       });
@@ -238,11 +264,11 @@ module.exports = function(options) {
         var data = {x: 5, y: 6};
         var op = {v: 0, create: {type: 'json0', data: data}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getSnapshot('testcollection', 'test', null, null, function(err, result) {
             if (err) return done(err);
-            expect(result).eql({id: 'test', type: 'http://sharejs.org/types/JSONv0', v: 1, data: data});
+            expect(result).eql({id: 'test', type: 'http://sharejs.org/types/JSONv0', v: 1, data: data, m: null});
             done();
           });
         });
@@ -251,9 +277,10 @@ module.exports = function(options) {
       it('getSnapshot does not return committed metadata by default', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.getSnapshot('testcollection', 'test', null, null, function(err, result) {
             if (err) return done(err);
-            expect(result.m).equal(undefined);
+            expect(result.m).equal(null);
             done();
           });
         });
@@ -262,6 +289,7 @@ module.exports = function(options) {
       it('getSnapshot returns metadata when option is true', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.getSnapshot('testcollection', 'test', null, {metadata: true}, function(err, result) {
             if (err) return done(err);
             expect(result.m).eql({test: 3});
@@ -273,6 +301,7 @@ module.exports = function(options) {
       it('getSnapshot returns metadata when fields is {$submit: true}', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.getSnapshot('testcollection', 'test', {$submit: true}, null, function(err, result) {
             if (err) return done(err);
             expect(result.m).eql({test: 3});
@@ -287,13 +316,13 @@ module.exports = function(options) {
         var data = {x: 5, y: 6};
         var op = {v: 0, create: {type: 'json0', data: data}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getSnapshotBulk('testcollection', ['test2', 'test'], null, null, function(err, resultMap) {
             if (err) return done(err);
             expect(resultMap).eql({
-              test: {id: 'test', type: 'http://sharejs.org/types/JSONv0', v: 1, data: data},
-              test2: {id: 'test2', type: null, v: 0, data: undefined}
+              test: {id: 'test', type: 'http://sharejs.org/types/JSONv0', v: 1, data: data, m: null},
+              test2: {id: 'test2', type: null, v: 0, data: undefined, m: null}
             });
             done();
           });
@@ -303,9 +332,10 @@ module.exports = function(options) {
       it('getSnapshotBulk does not return committed metadata by default', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.getSnapshotBulk('testcollection', ['test2', 'test'], null, null, function(err, resultMap) {
             if (err) return done(err);
-            expect(resultMap.test.m).equal(undefined);
+            expect(resultMap.test.m).equal(null);
             done();
           });
         });
@@ -314,6 +344,7 @@ module.exports = function(options) {
       it('getSnapshotBulk returns metadata when option is true', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.getSnapshotBulk('testcollection', ['test2', 'test'], null, {metadata: true}, function(err, resultMap) {
             if (err) return done(err);
             expect(resultMap.test.m).eql({test: 3});
@@ -335,7 +366,7 @@ module.exports = function(options) {
       it('getOps returns 1 committed op', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getOps('testcollection', 'test', 0, null, null, function(err, ops) {
             if (err) return done(err);
@@ -349,9 +380,9 @@ module.exports = function(options) {
         var op0 = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var op1 = {v: 1, op: [{p: ['x'], na: 1}]};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op0, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op0, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test', op1, function(err, succeeded) {
+          submit(db, 'testcollection', 'test', op1, function(err) {
             if (err) return done(err);
             db.getOps('testcollection', 'test', 0, null, null, function(err, ops) {
               if (err) return done(err);
@@ -366,9 +397,9 @@ module.exports = function(options) {
         var op0 = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var op1 = {v: 1, op: [{p: ['x'], na: 1}]};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op0, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op0, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test', op1, function(err, succeeded) {
+          submit(db, 'testcollection', 'test', op1, function(err) {
             if (err) return done(err);
             db.getOps('testcollection', 'test', null, null, null, function(err, ops) {
               if (err) return done(err);
@@ -383,9 +414,9 @@ module.exports = function(options) {
         var op0 = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var op1 = {v: 1, op: [{p: ['x'], na: 1}]};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op0, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op0, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test', op1, function(err, succeeded) {
+          submit(db, 'testcollection', 'test', op1, function(err) {
             if (err) return done(err);
             db.getOps('testcollection', 'test', 1, null, null, function(err, ops) {
               if (err) return done(err);
@@ -400,9 +431,9 @@ module.exports = function(options) {
         var op0 = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var op1 = {v: 1, op: [{p: ['x'], na: 1}]};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op0, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op0, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test', op1, function(err, succeeded) {
+          submit(db, 'testcollection', 'test', op1, function(err) {
             if (err) return done(err);
             db.getOps('testcollection', 'test', 0, 1, null, function(err, ops) {
               if (err) return done(err);
@@ -416,7 +447,7 @@ module.exports = function(options) {
       it('getOps does not return committed metadata by default', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}, m: {test: 3}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getOps('testcollection', 'test', null, null, null, function(err, ops) {
             if (err) return done(err);
@@ -429,7 +460,7 @@ module.exports = function(options) {
       it('getOps returns metadata when option is true', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}, m: {test: 3}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getOps('testcollection', 'test', null, null, {metadata: true}, function(err, ops) {
             if (err) return done(err);
@@ -455,9 +486,9 @@ module.exports = function(options) {
       it('getOpsBulk returns committed ops', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test2', op, function(err, succeeded) {
+          submit(db, 'testcollection', 'test2', op, function(err) {
             if (err) return done(err);
             db.getOpsBulk('testcollection', {test: 0, test2: 0}, null, null, function(err, opsMap) {
               if (err) return done(err);
@@ -474,9 +505,9 @@ module.exports = function(options) {
       it('getOpsBulk returns all ops committed from null', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test2', op, function(err, succeeded) {
+          submit(db, 'testcollection', 'test2', op, function(err) {
             if (err) return done(err);
             db.getOpsBulk('testcollection', {test: null, test2: null}, null, null, function(err, opsMap) {
               if (err) return done(err);
@@ -494,13 +525,13 @@ module.exports = function(options) {
         var op0 = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var op1 = {v: 1, op: [{p: ['x'], na: 1}]};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op0, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op0, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test2', op0, function(err, succeeded) {
+          submit(db, 'testcollection', 'test2', op0, function(err) {
             if (err) return done(err);
-            submit(db, 'testcollection', 'test', op1, function(err, succeeded) {
+            submit(db, 'testcollection', 'test', op1, function(err) {
               if (err) return done(err);
-              submit(db, 'testcollection', 'test2', op1, function(err, succeeded) {
+              submit(db, 'testcollection', 'test2', op1, function(err) {
                 if (err) return done(err);
                 db.getOpsBulk('testcollection', {test: 0, test2: 1}, null, null, function(err, opsMap) {
                   if (err) return done(err);
@@ -520,13 +551,13 @@ module.exports = function(options) {
         var op0 = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var op1 = {v: 1, op: [{p: ['x'], na: 1}]};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op0, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op0, function(err) {
           if (err) return done(err);
-          submit(db, 'testcollection', 'test2', op0, function(err, succeeded) {
+          submit(db, 'testcollection', 'test2', op0, function(err) {
             if (err) return done(err);
-            submit(db, 'testcollection', 'test', op1, function(err, succeeded) {
+            submit(db, 'testcollection', 'test', op1, function(err) {
               if (err) return done(err);
-              submit(db, 'testcollection', 'test2', op1, function(err, succeeded) {
+              submit(db, 'testcollection', 'test2', op1, function(err) {
                 if (err) return done(err);
                 db.getOpsBulk('testcollection', {test: 1, test2: 0}, {test2: 1}, null, function(err, opsMap) {
                   if (err) return done(err);
@@ -545,7 +576,7 @@ module.exports = function(options) {
       it('getOpsBulk does not return committed metadata by default', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}, m: {test: 3}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getOpsBulk('testcollection', {test: null}, null, null, function(err, opsMap) {
             if (err) return done(err);
@@ -558,7 +589,7 @@ module.exports = function(options) {
       it('getOpsBulk returns metadata when option is true', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}, m: {test: 3}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getOpsBulk('testcollection', {test: null}, null, {metadata: true}, function(err, opsMap) {
             if (err) return done(err);
@@ -573,7 +604,7 @@ module.exports = function(options) {
       it('getOpsToSnapshot returns committed op', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getSnapshot('testcollection', 'test', {$submit: true}, null, function(err, snapshot) {
             if (err) return done(err);
@@ -589,7 +620,7 @@ module.exports = function(options) {
       it('getOpsToSnapshot does not return committed metadata by default', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}, m: {test: 3}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getSnapshot('testcollection', 'test', {$submit: true}, null, function(err, snapshot) {
             if (err) return done(err);
@@ -605,7 +636,7 @@ module.exports = function(options) {
       it('getOpsToSnapshot returns metadata when option is true', function(done) {
         var op = {v: 0, create: {type: 'json0', data: {x: 5, y: 6}}, m: {test: 3}};
         var db = this.db;
-        submit(db, 'testcollection', 'test', op, function(err, succeeded) {
+        submit(db, 'testcollection', 'test', op, function(err) {
           if (err) return done(err);
           db.getSnapshot('testcollection', 'test', {$submit: true}, null, function(err, snapshot) {
             if (err) return done(err);
@@ -621,9 +652,9 @@ module.exports = function(options) {
 
     describe('query', function() {
       it('query returns data in the collection', function(done) {
-        var snapshot = {v: 1, type: 'json0', data: {x: 5, y: 6}};
+        var snapshot = {v: 1, type: 'json0', data: {x: 5, y: 6}, m: null};
         var db = this.db;
-        db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err, succeeded) {
+        db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
           if (err) return done(err);
           db.query('testcollection', {x: 5}, null, null, function(err, results) {
             if (err) return done(err);
@@ -645,9 +676,10 @@ module.exports = function(options) {
       it('query does not return committed metadata by default', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.query('testcollection', {x: 5}, null, null, function(err, results) {
             if (err) return done(err);
-            expect(results[0].m).equal(undefined);
+            expect(results[0].m).equal(null);
             done();
           });
         });
@@ -656,6 +688,7 @@ module.exports = function(options) {
       it('query returns metadata when option is true', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.query('testcollection', {x: 5}, null, {metadata: true}, function(err, results) {
             if (err) return done(err);
             expect(results[0].m).eql({test: 3});
@@ -672,6 +705,7 @@ module.exports = function(options) {
         var snapshot = {type: 'json0', v: 1, data: {x: 5, y: 6}};
         var db = this.db;
         db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
+          if (err) return done(err);
           db.query('testcollection', {x: 5}, {y: true}, null, function(err, results) {
             if (err) return done(err);
             expect(results).eql([{type: 'json0', v: 1, data: {y: 6}, id: 'test'}]);
@@ -686,6 +720,7 @@ module.exports = function(options) {
         var snapshot = {type: 'json0', v: 1, data: {x: 5, y: 6}};
         var db = this.db;
         db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
+          if (err) return done(err);
           db.query('testcollection', {x: 5}, {}, null, function(err, results) {
             if (err) return done(err);
             expect(results).eql([{type: 'json0', v: 1, data: {}, id: 'test'}]);
@@ -697,9 +732,10 @@ module.exports = function(options) {
       it('query does not return committed metadata by default with projection', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.query('testcollection', {x: 5}, {x: true}, null, function(err, results) {
             if (err) return done(err);
-            expect(results[0].m).equal(undefined);
+            expect(results[0].m).equal(null);
             done();
           });
         });
@@ -708,6 +744,7 @@ module.exports = function(options) {
       it('query returns metadata when option is true with projection', function(done) {
         var db = this.db;
         commitSnapshotWithMetadata(db, function(err) {
+          if (err) return done(err);
           db.query('testcollection', {x: 5}, {x: true}, {metadata: true}, function(err, results) {
             if (err) return done(err);
             expect(results[0].m).eql({test: 3});
@@ -717,98 +754,104 @@ module.exports = function(options) {
       });
     });
 
-    describe('queryPoll', function() {
-      it('returns data in the collection', function(done) {
-        var snapshot = {v: 1, type: 'json0', data: {x: 5, y: 6}};
-        var db = this.db;
-        db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err, succeeded) {
-          if (err) return done(err);
-          db.queryPoll('testcollection', {x: 5}, null, function(err, ids) {
+    if (options.getQuery) {
+      describe('queryPoll', function() {
+        it('returns data in the collection', function(done) {
+          var snapshot = {v: 1, type: 'json0', data: {x: 5, y: 6}};
+          var db = this.db;
+          db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
             if (err) return done(err);
-            expect(ids).eql(['test']);
+            var dbQuery = options.getQuery({query: {x: 5}});
+            db.queryPoll('testcollection', dbQuery, null, function(err, ids) {
+              if (err) return done(err);
+              expect(ids).eql(['test']);
+              done();
+            });
+          });
+        });
+
+        it('returns nothing when there is no data', function(done) {
+          var dbQuery = options.getQuery({query: {x: 5}});
+          this.db.queryPoll('testcollection', dbQuery, null, function(err, ids) {
+            if (err) return done(err);
+            expect(ids).eql([]);
             done();
           });
         });
       });
 
-      it('returns nothing when there is no data', function(done) {
-        this.db.queryPoll('testcollection', {x: 5}, null, function(err, ids) {
-          if (err) return done(err);
-          expect(ids).eql([]);
-          done();
-        });
-      });
-    });
+      describe('queryPollDoc', function() {
+        it('returns false when the document does not exist', function(done) {
+          var dbQuery = options.getQuery({query: {}});
+          if (!this.db.canPollDoc('testcollection', dbQuery)) return done();
 
-    describe('queryPollDoc', function() {
-      it('returns false when the document does not exist', function(done) {
-        var query = {};
-        if (!this.db.canPollDoc('testcollection', query)) return done();
-
-        var db = this.db;
-        db.queryPollDoc('testcollection', 'doesnotexist', query, null, function(err, result) {
-          if (err) return done(err);
-          expect(result).equal(false);
-          done();
-        });
-      });
-
-      it('returns true when the document matches', function(done) {
-        var query = {x: 5};
-        if (!this.db.canPollDoc('testcollection', query)) return done();
-
-        var snapshot = {type: 'json0', v: 1, data: {x: 5, y: 6}};
-        var db = this.db;
-        db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
-          db.queryPollDoc('testcollection', 'test', query, null, function(err, result) {
-            if (err) return done(err);
-            expect(result).equal(true);
-            done();
-          });
-        });
-      });
-
-      it('returns false when the document does not match', function(done) {
-        var query = {x: 6};
-        if (!this.db.canPollDoc('testcollection', query)) return done();
-
-        var snapshot = {type: 'json0', v: 1, data: {x: 5, y: 6}};
-        var db = this.db;
-        db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
-          db.queryPollDoc('testcollection', 'test', query, null, function(err, result) {
+          var db = this.db;
+          db.queryPollDoc('testcollection', 'doesnotexist', dbQuery, null, function(err, result) {
             if (err) return done(err);
             expect(result).equal(false);
             done();
           });
         });
-      });
-    });
 
-    describe('getQuery', function() {
-      it('getQuery argument order', function(done) {
-        // test that getQuery({query: {}, sort: [['foo', 1], ['bar', -1]]})
-        // sorts by foo first, then bar
-        var snapshots = [
-          {type: 'json0', id: '0', v: 1, data: {foo: 1, bar: 1}},
-          {type: 'json0', id: '1', v: 1, data: {foo: 2, bar: 1}},
-          {type: 'json0', id: '2', v: 1, data: {foo: 1, bar: 2}},
-          {type: 'json0', id: '3', v: 1, data: {foo: 2, bar: 2}}
-        ];
-        var db = this.db;
-        var dbQuery = getQuery({query: {}, sort: [['foo', 1], ['bar', -1]]});
+        it('returns true when the document matches', function(done) {
+          var dbQuery = options.getQuery({query: {x: 5}});
+          if (!this.db.canPollDoc('testcollection', dbQuery)) return done();
 
-        async.each(snapshots, function(snapshot, cb) {
-          db.commit('testcollection', snapshot.id, {v: 0, create: {}}, snapshot, null, cb);
-        }, function(err) {
-          if (err) throw err;
-          db.query('testcollection', dbQuery, null, null, function(err, results) {
-            if (err) throw err;
-            expect(results).eql(
-              [snapshots[2], snapshots[0], snapshots[3], snapshots[1]]);
-            done();
+          var snapshot = {type: 'json0', v: 1, data: {x: 5, y: 6}};
+          var db = this.db;
+          db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
+            if (err) return done(err);
+            db.queryPollDoc('testcollection', 'test', dbQuery, null, function(err, result) {
+              if (err) return done(err);
+              expect(result).equal(true);
+              done();
+            });
+          });
+        });
+
+        it('returns false when the document does not match', function(done) {
+          var dbQuery = options.getQuery({query: {x: 6}});
+          if (!this.db.canPollDoc('testcollection', dbQuery)) return done();
+
+          var snapshot = {type: 'json0', v: 1, data: {x: 5, y: 6}};
+          var db = this.db;
+          db.commit('testcollection', 'test', {v: 0, create: {}}, snapshot, null, function(err) {
+            if (err) return done(err);
+            db.queryPollDoc('testcollection', 'test', dbQuery, null, function(err, result) {
+              if (err) return done(err);
+              expect(result).equal(false);
+              done();
+            });
           });
         });
       });
-    });
+
+      describe('getQuery', function() {
+        it('getQuery argument order', function(done) {
+          // test that options.getQuery({query: {}, sort: [['foo', 1], ['bar', -1]]})
+          // sorts by foo first, then bar
+          var snapshots = [
+            {type: 'json0', id: '0', v: 1, data: {foo: 1, bar: 1}, m: null},
+            {type: 'json0', id: '1', v: 1, data: {foo: 2, bar: 1}, m: null},
+            {type: 'json0', id: '2', v: 1, data: {foo: 1, bar: 2}, m: null},
+            {type: 'json0', id: '3', v: 1, data: {foo: 2, bar: 2}, m: null}
+          ];
+          var db = this.db;
+          var dbQuery = options.getQuery({query: {}, sort: [['foo', 1], ['bar', -1]]});
+
+          async.each(snapshots, function(snapshot, cb) {
+            db.commit('testcollection', snapshot.id, {v: 0, create: {}}, snapshot, null, cb);
+          }, function(err) {
+            if (err) throw err;
+            db.query('testcollection', dbQuery, null, null, function(err, results) {
+              if (err) throw err;
+              expect(results).eql(
+                [snapshots[2], snapshots[0], snapshots[3], snapshots[1]]);
+              done();
+            });
+          });
+        });
+      });
+    }
   });
 };
