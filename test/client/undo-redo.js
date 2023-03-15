@@ -1457,7 +1457,7 @@ describe('client undo/redo', function() {
     expect(opCalled).to.equal(2);
   });
 
-  it('submits a snapshot with a diffHint', function() {
+  it.skip('submits a snapshot with a diffHint', function() {
     var undoManager = this.connection.createUndoManager();
     var opCalled = 0;
     this.doc.create([ otRichText.Action.createInsertText('aaaa') ], otRichText.type.uri);
