@@ -1,6 +1,6 @@
 {
   "name": "@teable/sharedb",
-  "version": "3.3.0",
+  "version": "3.3.2",
   "description": "JSON OT database backend",
   "main": "lib/index.js",
   "dependencies": {
@@ -31,7 +31,8 @@
   },
   "files": [
     "lib/",
-    "test/"
+    "test/",
+    "type/"
   ],
   "scripts": {
     "docs:install": "cd docs && bundle install",
