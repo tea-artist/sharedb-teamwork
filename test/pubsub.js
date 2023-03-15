@@ -1,4 +1,4 @@
-var expect = require('expect.js');
+var expect = require('chai').expect;
 
 module.exports = function(create) {
   describe('pubsub', function() {
@@ -38,7 +38,7 @@ module.exports = function(create) {
 
     it('publish optional callback returns', function(done) {
       var pubsub = this.pubsub;
-      pubsub.subscribe('x', function(err, stream) {
+      pubsub.subscribe('x', function(err) {
         if (err) done(err);
         pubsub.publish(['x'], {test: true}, done);
       });
@@ -46,10 +46,10 @@ module.exports = function(create) {
 
     it('can subscribe to a channel twice', function(done) {
       var pubsub = this.pubsub;
-      pubsub.subscribe('y', function(err, stream) {
+      pubsub.subscribe('y', function(err) {
+        if (err) done(err);
         pubsub.subscribe('y', function(err, stream) {
           if (err) done(err);
-          var emitted;
           stream.on('data', function(data) {
             expect(data).eql({test: true});
             done();
@@ -78,7 +78,7 @@ module.exports = function(create) {
 
     it('can emit events', function(done) {
       this.pubsub.on('error', function(err) {
-        expect(err).an(Error);
+        expect(err).instanceOf(Error);
         expect(err.message).equal('test error');
         done();
       });

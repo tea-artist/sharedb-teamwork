@@ -39,3 +39,15 @@ exports.callAfter = function(calls, callback) {
   callbackAfter.called = 0;
   return callbackAfter;
 };
+
+exports.errorHandler = function(callback) {
+  return function(error) {
+    if (error) callback(error);
+  };
+};
+
+exports.errorHandler = function(callback) {
+  return function(error) {
+    if (error) callback(error);
+  };
+};
