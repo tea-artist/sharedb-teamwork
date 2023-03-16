@@ -36,6 +36,12 @@ export class Connection extends ShareDB.TypedEmitter<ShareDB.ConnectionEventMap>
     options?: { results?: Array<Doc<T>> } | null,
     callback?: (err: Error, results: Array<Doc<T>>) => void
   ): Query<T>;
+  createUndoManager(options: {
+    source?: string;
+    limit?: number;
+    composeInterval?: number;
+  }): UndoManager;
+  removeUndoManager(undoManager: UndoManager): void;
   fetchSnapshot(
     collection: string,
     id: string,
@@ -77,6 +83,40 @@ export class Connection extends ShareDB.TypedEmitter<ShareDB.ConnectionEventMap>
 
   ping(): void;
 }
+
+export abstract class UndoManager {
+  constructor(
+    connection: Connection,
+    options?: {
+      source?: string;
+      limit?: number;
+      composeInterval?: number;
+    }
+  ) {}
+
+  canUndo(): boolean;
+
+  canRedo(): booolean;
+
+  undo(callback?: (error: Error) => void): void;
+  undo(options?: { source?: string }, callback?: (error: Error) => void): void;
+  undo(
+    options?: { source?: string } | ((error: Error) => void),
+    callback?: (error: Error) => void
+  ): void;
+
+  redo(callback?: (error: Error) => void): void;
+  redo(options?: { source?: string }, callback?: (error: Error) => void): void;
+  redo(
+    options?: { source?: string } | ((error: Error) => void),
+    callback?: (error: Error) => void
+  ): void;
+
+  clear(doc?: Doc): void;
+
+  destroy(): void;
+}
+
 export type Doc<T = any> = ShareDB.Doc<T>;
 export type Snapshot<T = any> = ShareDB.Snapshot<T>;
 export type Query<T = any> = ShareDB.Query<T>;
