@@ -98,7 +98,17 @@ export interface Error {
     code: number;
     message: string;
 }
-export interface ShareDBSourceOptions { source?: any; }
+
+export interface ShareDBSourceOptions {
+  // source passed into 'op' event handler
+  source?: any;
+  // skipNoop should processing be skipped entirely, if `component` is a no-op.
+  skipNoop?: boolean;
+  // undoable should the operation be undoable
+  undoable?: boolean;
+  // fixUp If true, this operation is meant to fix the current invalid state of the snapshot.
+  fixUp?: boolean;
+}
 // interface ShareDBCreateOptions extends ShareDBSourceOptions {}
 // interface ShareDBDelOptions extends ShareDBSourceOptions {}
 // interface ShareDBSubmitOpOptions extends ShareDBSourceOptions {}
