@@ -19,16 +19,18 @@ var SHAREDB_RULES = {
   // Less aggressive line length than Google, which is especially useful when we have a lot of callbacks in our code
   'max-len': ['error',
     {
-      code: 120,
+      code: 150,
       tabWidth: 2,
       ignoreUrls: true
     }
   ],
   // Google overrides the default ESLint behaviour here, which is slightly better for catching erroneously unused
   // variables
-  'no-unused-vars': ['error', {vars: 'all', args: 'after-used'}],
+  'no-unused-vars': ['error', { vars: 'all', args: 'after-used', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
   // It's more readable to ensure we only have one statement per line
-  'max-statements-per-line': ['error', {max: 1}],
+  'max-statements-per-line': ['error', { max: 1 }],
+  'space-before-function-paren': ['off'],
+  'object-curly-spacing': ['error', 'always'],
   // ES3 doesn't support spread
   'prefer-spread': 'off',
   // as-needed quote props are easier to write
