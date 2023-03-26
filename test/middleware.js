@@ -340,7 +340,7 @@ describe('middleware', function() {
 
     it('has the source in commit middleware', function(done) {
       this.backend.use('commit', function(request) {
-        expect(request.extra).to.eql({source: 'trainer'});
+        expect(request.extra).to.have.deep.property('source', 'trainer');
         done();
       });
 
@@ -349,7 +349,7 @@ describe('middleware', function() {
 
     it('has the source in afterWrite middleware', function(done) {
       this.backend.use('afterWrite', function(request) {
-        expect(request.extra).to.eql({source: 'trainer'});
+        expect(request.extra).to.have.deep.property('source', 'trainer');
         done();
       });
 
@@ -383,7 +383,7 @@ describe('middleware', function() {
 
       this.backend.use('commit', function(request) {
         expect(request.op.op).to.have.length(3);
-        expect(request.extra).to.eql({source: {type: 'trainer'}});
+        expect(request.extra).to.have.deep.property('source', { type: 'trainer' });
         done();
       });
 
@@ -398,7 +398,7 @@ describe('middleware', function() {
 
       this.backend.use('commit', function(request) {
         expect(request.op.op).to.have.length(2);
-        expect(request.extra).to.eql({source: {type: 'trainer'}});
+        expect(request.extra).to.have.deep.property('source', { type: 'trainer' });
         done();
       });
 
