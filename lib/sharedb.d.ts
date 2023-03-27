@@ -108,6 +108,10 @@ export interface ShareDBSourceOptions {
   undoable?: boolean;
   // fixUp If true, this operation is meant to fix the current invalid state of the snapshot.
   fixUp?: boolean;
+  // transactionKey is a key that can be used to group operations together.
+  transactionKey?: string;
+  // opCount is the number of operations that have been submitted in this transaction.
+  opCount?: number;
 }
 // interface ShareDBCreateOptions extends ShareDBSourceOptions {}
 // interface ShareDBDelOptions extends ShareDBSourceOptions {}
